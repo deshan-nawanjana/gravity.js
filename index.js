@@ -25,7 +25,9 @@ Gravity.Scene = class {
     // method to set options
     set() {
         // get options by arguments
-        const options = _Gravity_.getSetOptions(arguments)
+        const options = _Gravity_.getSetOptions(arguments, this)
+        // return if nothing to update
+        if(options === null) { return }
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
         // update resistance if given
@@ -107,7 +109,9 @@ Gravity.Object = class {
     // method to set options
     set() {
         // get options by arguments
-        const options = _Gravity_.getSetOptions(arguments)
+        const options = _Gravity_.getSetOptions(arguments, this)
+        // return if nothing to update
+        if(options === null) { return }
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
         // update physical flag if given
@@ -205,7 +209,9 @@ Gravity.Texture = class {
     // method to set options
     set() {
         // get options by arguments
-        const options = _Gravity_.getSetOptions(arguments)
+        const options = _Gravity_.getSetOptions(arguments, this)
+        // return if nothing to update
+        if(options === null) { return }
         // update color if given
         if('color' in options) { this.color = options.color }
         // update image if given
@@ -222,26 +228,13 @@ Gravity.Texture = class {
         if('animation' in options) {
             // update animation
             this.animation = options.animation
-            if(this.animation) {
-                // generate animation node
-                this.element.childNodes[1].data = `
-                    [texture="${ this.id }"] {
-                        animation-name: ${ this.animation.id };
-                        animation-duration: ${ this.animation.duration }s;
-                        animation-delay: ${ this.animation.delay }s;
-                        animation-direction: ${
-                            this.animation.reverse ? 'reverse' : 'normal'
-                        };
-                        animation-iteration-count: ${
-                            this.animation.loop === true ? 'infinite'
-                                : this.animation.loop === false
-                                    ? '1' : this.animation.loop
-                        };
-                    }
-                `
-            } else {
+            // check animation
+            if(this.animation === null) {
                 // remove animation rules
                 this.element.childNodes[1].data = ''
+            } else {
+                // update animation
+                this.animation.set()
             }
         }
         // generate style node
@@ -313,7 +306,9 @@ Gravity.Animation = class {
     // method to set options
     set() {
         // get options by arguments
-        const options = _Gravity_.getSetOptions(arguments)
+        const options = _Gravity_.getSetOptions(arguments, this, true)
+        // return if nothing to update
+        if(options === null) { return }
         // update duration if given
         if('duration' in options) { this.duration = options.duration }
         // update delay if given
@@ -358,8 +353,27 @@ Gravity.Animation = class {
             const texture = textures[i]
             // if texture is ready to update
             if(texture.element.childNodes.length === 2) {
-                // update current texture
-                texture.set('animation', this)
+                // generate animation rules
+                const rules = `
+                    [texture="${ texture.id }"] {
+                        animation-name: ${ this.id };
+                        animation-duration: ${ this.duration }s;
+                        animation-delay: ${ this.delay }s;
+                        animation-direction: ${
+                            this.reverse ? 'reverse' : 'normal'
+                        };
+                        animation-iteration-count: ${
+                            this.loop === true ? 'infinite'
+                                : this.loop === false
+                                    ? '1' : this.loop
+                        };
+                    }
+                `
+                // if rules not equals to previous
+                if(texture.element.childNodes[1].data !== rules) {
+                    // update animation node
+                    texture.element.childNodes[1].data = rules
+                }
             }
         }
     }
@@ -392,34 +406,91 @@ Gravity.AssetLoader = class {
     }
 }
 
+// input map class
+Gravity.InputMap = class {
+    // constructor
+    constructor() {
+        this.keys = []
+        // keydown listener
+        window.addEventListener('keydown', event => {
+            // get key letter or code
+            const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
+            // if not in keys array
+            if(this.keys.includes(key) === false) {
+                // push to keys array
+                this.keys.push(key)
+            }
+        })
+        // keyup listener
+        window.addEventListener('keyup', event => {
+            // get key letter or code
+            const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
+            // remove from keys array
+            this.keys = this.keys.filter(x => x !== key)
+        })
+    }
+}
+
 // gravity helpers
 const _Gravity_ = {}
 
 // helper to map set options
-_Gravity_.getSetOptions = args => {
-    // return if no args
-    if(args.length === 0) { return {} }
+_Gravity_.getSetOptions = (args, that, override = false) => {
+    // options object
+    const obj = {}
     // check args length
     if(args.length === 1 && typeof args[0] === 'object' && args[1] !== null) {
-        // return first as object
-        return args[0]
+        // first arg as object
+        Object.assign(obj, args[0])
     } else if(args.length === 2 && typeof args[0] === 'string') {
-        // output object
-        const out = {}
         // set single value option
-        out[args[0]] = args[1]
-        // return output
-        return out
+        obj[args[0]] = args[1]
     } else if(args.length === 3 && typeof args[0] === 'string') {
-        // output object
-        const out = {}
         // set multi value option
-        out[args[0]] = { x : args[1], y : args[2] }
-        // return output
-        return out
+        obj[args[0]] = { x : args[1], y : args[2] }
+    }
+    // output object
+    const out = {}
+    // keys array
+    const keys = Object.keys(obj)
+    // for each key
+    for(let i = 0; i < keys.length; i++) {
+        // current key
+        const key = keys[i]
+        // current value
+        const val = obj[key]
+        // if values not equals
+        if(that[key] !== val) {
+            // check null value
+            if(that[key] === null || val === null) {
+                // set to updates
+                out[key] = val
+            } else if(typeof val === 'object') {
+                // check for multi value option
+                if('x' in val && 'y' in val) {
+                    // check x and y values
+                    if(that[key].x !== val.x || that[key].y !== val.y) {
+                        // set to updates
+                        out[key] = val
+                    }
+                } else {
+                    // set to updates
+                    out[key] = val
+                }
+            } else {
+                // set to updates
+                out[key] = val
+            }
+        }
+    }
+    if(override) { return obj }
+    // check output keys length
+    if(Object.keys(out).length === 0) {
+        // nothing to update
+        return null
     } else {
-        // return empty
-        return {}
+        // return object to update
+        return out
     }
 }
 
