@@ -69,7 +69,7 @@ Gravity.Scene = class {
     }
     // method to render frame
     render() {
-        
+        _Gravity_.updateMotion(this)
     }
 }
 
@@ -527,4 +527,191 @@ _Gravity_.loadImage = url => {
         // set image url
         img.src = url
     })
+}
+
+// helper to detect two objects horizontal collision
+_Gravity_.isHorizontalBetween = (b, d, x, z) => {
+    return (
+        (d >= z && d <= x) && (b >= z && b <= x) || (d >= z && d <= x) && (b >= z && b >= x) ||
+        (d <= z && d <= x) && (b >= z && b <= x) || (d <= z && d <= x) && (b >= z && b >= x)
+    )
+}
+
+// helper to detect two objects vertical collision
+_Gravity_.isVerticalBetween = (a, c, w, y) => {
+    return (
+        (a <= w && a <= y) && (c >= w && c <= y) || (a >= w && a <= y) && (c >= w && c <= y) ||
+	    (a >= w && a <= y) && (c >= w && c >= y) || (a <= w && a <= y) && (c >= w && c >= y)
+    )
+}
+
+// helper to find collide details
+_Gravity_.getCollideState = (a, b, c, d, w, x, y, z) => {
+    return {
+        top : _Gravity_.isHorizontalBetween(b, d, x, z) && a <= y && c >= y,
+        bottom : _Gravity_.isHorizontalBetween(b, d, x, z) && c >= w && a <= w,
+        left : _Gravity_.isVerticalBetween(a, c, w, y) && d <= x && b >= x,
+        right : _Gravity_.isVerticalBetween(a, c, w, y) && b >= z && d <= z,
+        topRight : (x - d) > (c - w) ? 'A' : 'B',
+        topLeft : (b - z) > (c - w) ? 'A' : 'D',
+        bottomLeft : (b - z) > (y - a) ? 'C' : 'D',
+        bottomRight : (x - d) > (y - a) ? 'C' : 'B'
+    }
+}
+
+// helper to update motions
+_Gravity_.updateMotion = scene => {
+    // objects of scene
+    const objects = scene.objects
+    // for each child
+    for(let i = 0; i < objects.length; i++) {
+        // current child
+        const child = objects[i]
+        // only if physics is enabled
+        if(child.physical) {
+            // check for fall of gravity
+            if(child.fixed.y === false) {
+                // update velocity
+                child.velocity.y += scene.gravity / 50
+                // update position
+                child.position.y += child.velocity.y
+            } else {
+                // constant horizontal movement
+                child.position.y += child.velocity.y
+            }
+            // check for vertical movement
+            if(child.fixed.x === false) {
+                // horizontal move
+                child.position.x += child.velocity.x
+            } else {
+                // constant vertical movement
+                child.position.x += child.velocity.x
+            }
+            // update collisions
+            _Gravity_.updateCollisions(child, objects)
+            // check collide object
+            if(child.collide.length > 0) {
+                // total friction of collide objects
+                const friction = child.collide.map(x => x.friction).reduce((a, b) => a + b)
+                // reduce horizontal velocity
+                child.velocity.x -= child.velocity.x * friction
+            }
+            // remove system resistance mod
+            child.velocity.x -= child.velocity.x % scene.resistance
+            // fixing floats
+            child.velocity.x = parseFloat(parseFloat(child.velocity.x).toFixed(2))
+            child.velocity.y = parseFloat(parseFloat(child.velocity.y).toFixed(2))
+        }
+        // child element
+        const element = child.element
+        // update position
+        element.style.left = child.position.x + scene.position.x + 'px'
+        element.style.top = child.position.y + scene.position.y + 'px'
+    }
+}
+
+// helper to update collisions
+_Gravity_.updateCollisions = (child_1, objects) => {
+    // collide objects array
+    const collide = []
+    // child positions
+    const a = child_1.position.y
+    const b = child_1.position.x + child_1.size.x
+    const c = child_1.position.y + child_1.size.y
+    const d = child_1.position.x
+    // for each child
+    for(let i = 0; i < objects.length; i++) {
+        // current child
+        const child_2 = objects[i]
+        // continue if same child
+        if(child_1 === child_2) { continue }
+        // continue physics not enabled
+        if(child_2.physical === false) { continue }
+        // child positions
+        const w = child_2.position.y
+        const x = child_2.position.x + child_2.size.x
+        const y = child_2.position.y + child_2.size.y
+        const z = child_2.position.x
+        // get collide details
+        const s = _Gravity_.getCollideState(a, b, c, d, w, x, y, z)
+        // bounce methods
+        const bounce = {
+            top() {
+                // reset object position
+                child_1.position.y = w - child_1.size.y
+                // return if fixed vertically
+                if(child_1.fixed.y) { return }
+                // reverse velocity
+                child_1.velocity.y = -Math.abs(child_1.velocity.y) * child_1.elasticity
+                if(child_2.fixed.y === false) {
+                    child_2.velocity.y = child_1.velocity.y * -1
+                }
+            },
+            bottom() {
+                // reset object position
+                child_1.position.y = y
+                // return if fixed vertically
+                if(child_1.fixed.y) { return }
+                // reverse velocity
+                child_1.velocity.y = Math.abs(child_1.velocity.y) * child_1.elasticity
+                if(child_2.fixed.y === false) {
+                    child_2.velocity.y = child_1.velocity.y * -1
+                }
+            },
+            left() {
+                // reset object position
+                child_1.position.x = z - child_1.size.x
+                // return if fixed horizontally
+                if(child_1.fixed.x) { return }
+                // reverse velocity
+                child_1.velocity.x = -Math.abs(child_1.velocity.x) * child_1.elasticity
+                if(child_2.fixed.x === false) {
+                    child_2.velocity.x = child_1.velocity.x * -1
+                }
+            },
+            right() {
+                // reset object position
+                child_1.position.x = x
+                // return if fixed horizontally
+                if(child_1.fixed.x) { return }
+                // reverse velocity
+                child_1.velocity.x = Math.abs(child_1.velocity.x) * child_1.elasticity
+                if(child_2.fixed.x === false) {
+                    child_2.velocity.x = child_1.velocity.x * -1
+                }
+            }
+        }
+        // object smaller than barrier
+        if(s.top && !s.right && !s.bottom && !s.left) { bounce.bottom() }
+        if(!s.top && !s.right && s.bottom && !s.left) { bounce.top() }
+        if(!s.top && s.right && !s.bottom && !s.left) { bounce.left() }
+        if(!s.top && !s.right && !s.bottom && s.left) { bounce.right() }
+        // object larger than barrier
+        if(s.top && !s.right && s.bottom && s.left) { bounce.right() }
+        if(s.top && s.right && s.bottom && !s.left) { bounce.left() }
+        if(!s.top && s.right && s.bottom && s.left) { bounce.top() }
+        if(s.top && s.right && !s.bottom && s.left) { bounce.bottom() }
+        // bottom left corner collision
+        if(s.top && s.right && !s.bottom && !s.left) {
+            s.bottomLeft === 'C' ? bounce.bottom() : bounce.left()
+        }
+        // bottom right corner collision
+        if(s.top && !s.right && !s.bottom && s.left) {
+            s.bottomRight === 'C' ? bounce.bottom() : bounce.right()
+        }
+        // top right corner collision
+        if(!s.top && !s.right && s.bottom && s.left) {
+            s.topRight === 'A' ? bounce.top() : bounce.right()
+        }
+        // top left corner collision
+        if(!s.top && s.right && s.bottom && !s.left) {
+            s.topLeft === 'A' ? bounce.top() : bounce.left()
+        }
+        // if any collision
+        if(s.top || s.right || s.bottom || s.left) {
+            collide.push(child_2)
+        }
+    }
+    // update collide array
+    child_1.collide = collide
 }
