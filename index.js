@@ -162,6 +162,11 @@ Gravity.Object = class {
             this.element.setAttribute('texture', this.texture.id)
         }
     }
+    // method to clone
+    clone() {
+        // return cloned object
+        return new Gravity.Object(this)
+    }
 }
 
 // texture class
@@ -270,6 +275,11 @@ Gravity.Texture = class {
             }
         `
     }
+    // method to clone
+    clone() {
+        // return cloned texture
+        return new Gravity.Texture(this)
+    }
 }
 
 // list of textures
@@ -352,6 +362,11 @@ Gravity.Animation = class {
                 texture.set('animation', this)
             }
         }
+    }
+    // method to clone
+    clone() {
+        // return cloned animation
+        return new Gravity.Animation(this)
     }
 }
 
