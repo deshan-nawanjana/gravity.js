@@ -69,7 +69,7 @@ Gravity.Scene = class {
     }
     // method to render frame
     render() {
-
+        
     }
 }
 
@@ -88,7 +88,7 @@ Gravity.Object = class {
         // velocity
         this.velocity = { x : 0, y : 0 }
         // fixed axes
-        this.fixed = { x : 0, y : 0 }
+        this.fixed = { x : false, y : false }
         // weight
         this.weight = 50
         // current collide objects
@@ -195,14 +195,16 @@ Gravity.Texture = class {
         this.flip = { x : false, y : false }
         // animation
         this.animation = null
-        // append style node
-        this.element.appendChild(document.createTextNode(' '))
-        // append animation node
-        this.element.appendChild(document.createTextNode(' '))
+        // duration in seconds
+        this.duration = 1
+        // delay in seconds
+        this.delay = 0
+        // reverse flag
+        this.reverse = false
+        // loop flag
+        this.loop = true
         // append style element to head
         document.head.appendChild(this.element)
-        // push to texture list
-        Gravity.Texture.list.push(this)
         // set options
         this.set(options || {})
     }
@@ -225,20 +227,17 @@ Gravity.Texture = class {
         // update flip if given
         if('flip' in options) { this.flip = options.flip }
         // update animation if given
-        if('animation' in options) {
-            // update animation
-            this.animation = options.animation
-            // check animation
-            if(this.animation === null) {
-                // remove animation rules
-                this.element.childNodes[1].data = ''
-            } else {
-                // update animation
-                this.animation.set()
-            }
-        }
+        if('animation' in options) { this.animation = options.animation }
+        // update duration if given
+        if('duration' in options) { this.duration = options.duration }
+        // update delay if given
+        if('delay' in options) { this.delay = options.delay }
+        // update reverse if given
+        if('reverse' in options) { this.reverse = options.reverse }
+        // update loop if given
+        if('loop' in options) { this.loop = options.loop }
         // generate style node
-        this.element.childNodes[0].data = `
+        this.element.innerHTML = `
             [texture="${ this.id }"] {
                 background-color: ${ this.color || 'transparent' };
                 background-image: ${
@@ -265,6 +264,19 @@ Gravity.Texture = class {
                     typeof this.position.y === 'number' ? this.position.y + 'px'
                     : this.position.y
                 };
+                animation-name: ${
+                    this.animation ? this.animation.id : 'none'
+                };
+                animation-duration: ${ this.duration }s;
+                animation-delay: ${ this.delay }s;
+                animation-direction: ${
+                    this.reverse ? 'reverse' : 'normal'
+                };
+                animation-iteration-count: ${
+                    this.loop === true ? 'infinite'
+                        : this.loop === false
+                            ? '1' : this.loop
+                };
             }
         `
     }
@@ -275,9 +287,6 @@ Gravity.Texture = class {
     }
 }
 
-// list of textures
-Gravity.Texture.list = []
-
 // animation class
 Gravity.Animation = class {
     // constructor
@@ -286,14 +295,6 @@ Gravity.Animation = class {
         this.id = _Gravity_.createID()
         // create style element
         this.element = document.createElement('style')
-        // duration in seconds
-        this.duration = 1
-        // delay in seconds
-        this.delay = 0
-        // reverse flag
-        this.reverse = false
-        // loop flag
-        this.loop = true
         // colors array
         this.colors = []
         // images array
@@ -306,17 +307,9 @@ Gravity.Animation = class {
     // method to set options
     set() {
         // get options by arguments
-        const options = _Gravity_.getSetOptions(arguments, this, true)
+        const options = _Gravity_.getSetOptions(arguments, this)
         // return if nothing to update
         if(options === null) { return }
-        // update duration if given
-        if('duration' in options) { this.duration = options.duration }
-        // update delay if given
-        if('delay' in options) { this.delay = options.delay }
-        // update reverse if given
-        if('reverse' in options) { this.reverse = options.reverse }
-        // update loop if given
-        if('loop' in options) { this.loop = options.loop }
         // update images if given
         if('images' in options || 'colors' in options) {
             // update images
@@ -344,37 +337,6 @@ Gravity.Animation = class {
                     })()}}
                 }
             `
-        }
-        // filter textures that uses this animation
-        const textures = Gravity.Texture.list.filter(x => x.animation === this)
-        // for each texture
-        for(let i = 0; i < textures.length; i++) {
-            // current texture
-            const texture = textures[i]
-            // if texture is ready to update
-            if(texture.element.childNodes.length === 2) {
-                // generate animation rules
-                const rules = `
-                    [texture="${ texture.id }"] {
-                        animation-name: ${ this.id };
-                        animation-duration: ${ this.duration }s;
-                        animation-delay: ${ this.delay }s;
-                        animation-direction: ${
-                            this.reverse ? 'reverse' : 'normal'
-                        };
-                        animation-iteration-count: ${
-                            this.loop === true ? 'infinite'
-                                : this.loop === false
-                                    ? '1' : this.loop
-                        };
-                    }
-                `
-                // if rules not equals to previous
-                if(texture.element.childNodes[1].data !== rules) {
-                    // update animation node
-                    texture.element.childNodes[1].data = rules
-                }
-            }
         }
     }
     // method to clone
@@ -435,7 +397,7 @@ Gravity.InputMap = class {
 const _Gravity_ = {}
 
 // helper to map set options
-_Gravity_.getSetOptions = (args, that, override = false) => {
+_Gravity_.getSetOptions = (args, that) => {
     // options object
     const obj = {}
     // check args length
@@ -483,7 +445,6 @@ _Gravity_.getSetOptions = (args, that, override = false) => {
             }
         }
     }
-    if(override) { return obj }
     // check output keys length
     if(Object.keys(out).length === 0) {
         // nothing to update
@@ -513,7 +474,7 @@ _Gravity_.createID = () => {
 // list of previous ids
 _Gravity_.createID.list = []
 
-// method to load all assets
+// helper to load all assets
 _Gravity_.loadAssets = async(input, progess, complete, error) => {
     // items array
     const items = []
@@ -553,7 +514,7 @@ _Gravity_.loadAssets = async(input, progess, complete, error) => {
     complete(input)
 }
 
-// method to load image
+// helper to load image
 _Gravity_.loadImage = url => {
     // return promise
     return new Promise((resolve, reject) => {
