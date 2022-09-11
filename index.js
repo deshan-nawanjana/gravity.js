@@ -17,11 +17,14 @@ Gravity.Scene = class {
         this.position = { x : 0, y : 0 }
         // size of scene
         this.size = { x : 400, y : 300 }
+        // texture
+        this.texture = null
         // set options
         this.set(options || {})
     }
     // method to set options
     set() {
+        // get options by arguments
         const options = _Gravity_.getSetOptions(arguments)
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
@@ -39,6 +42,13 @@ Gravity.Scene = class {
             this.element.style.width = this.size.x + 'px'
             // update element height
             this.element.style.height = this.size.y + 'px'
+        }
+        // update texture if given
+        if('texture' in options) {
+            // texture size
+            this.texture = options.texture
+            // update element texture
+            this.element.setAttribute('texture', this.texture.id)
         }
     }
     // method to add objects
@@ -94,6 +104,7 @@ Gravity.Object = class {
     }
     // method to set options
     set() {
+        // get options by arguments
         const options = _Gravity_.getSetOptions(arguments)
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
@@ -144,6 +155,70 @@ Gravity.Object = class {
     }
 }
 
+// texture class
+Gravity.Texture = class {
+    // constructor
+    constructor(options) {
+        // texture id
+        this.id = _Gravity_.createID()
+        // create style element
+        this.element = document.createElement('style')
+        // color
+        this.color = null
+        // image
+        this.image = null
+        // scale of image
+        this.scale = { x : 1, y : 1 }
+        // repetition of image
+        this.repeat = { x : true, y : true }
+        // flip of image
+        this.flip = { x : false, y : false }
+        // animation
+        this.animation = null
+        // set options
+        this.set(options || {})
+        // append style element to head
+        document.head.appendChild(this.element)
+    }
+    // method to set options
+    set() {
+        // get options by arguments
+        const options = _Gravity_.getSetOptions(arguments)
+        // update color if given
+        if('color' in options) { this.color = options.color }
+        // update image if given
+        if('image' in options) { this.image = encodeURI(options.image) }
+        // update scale if given
+        if('scale' in options) { this.scale = options.scale }
+        // update repeat if given
+        if('repeat' in options) { this.repeat = options.repeat }
+        // update flip if given
+        if('flip' in options) { this.flip = options.flip }
+        // update animation if given
+        if('animation' in options) { this.animation = options.animation }
+        // generate and set on style element
+        this.element.innerHTML = `
+            [texture="${ this.id }"] {
+                background-color: ${ this.color || 'transparent' };
+                background-image: ${ this.image ? `url(${ this.image })` : 'none' };
+                background-size: ${ this.scale.x * 100 }% ${ this.scale.y * 100 }%;
+                background-repeat: ${
+                    this.repeat.x && this.repeat.y ? 'repeat'
+                        : this.repeat.x && !this.repeat.y ? 'repeat-x'
+                        : !this.repeat.x && this.repeat.y ? 'repeat-y'
+                        : 'no-repeat'
+                };
+                transform: scale(${
+                    this.flip.x && this.flip.y ? '-1, -1'
+                        : this.flip.x && !this.flip.y ? '-1, 1'
+                        : !this.flip.x && this.flip.y ? '1, -1'
+                        : '1, 1'
+                });
+            }
+        `
+    }
+}
+
 // gravity helpers
 const _Gravity_ = {}
 
@@ -169,5 +244,27 @@ _Gravity_.getSetOptions = args => {
         out[args[0]] = { x : args[1], y : args[2] }
         // return output
         return out
+    } else {
+        // return empty
+        return {}
     }
 }
+
+// helper to create an id
+_Gravity_.createID = () => {
+    // array of ids
+    const list = _Gravity_.createID.list
+    // new id
+    let id = null
+    // while find proper id
+    while(id === null || list.includes(id)) {
+        id = 'G-' + (Date.now() + parseInt(Math.random() * Date.now()))
+    }
+    // push to ids
+    list.push(id)
+    // return new id
+    return id
+}
+
+// list of previous ids
+_Gravity_.createID.list = []
