@@ -21,7 +21,8 @@ Gravity.Scene = class {
         this.set(options || {})
     }
     // method to set options
-    set(options) {
+    set() {
+        const options = _Gravity_.getSetOptions(arguments)
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
         // update resistance if given
@@ -72,6 +73,10 @@ Gravity.Object = class {
         this.friction = 0.05
         // elasticity
         this.elasticity = 0.2
+        // velocity
+        this.velocity = { x : 0, y : 0 }
+        // fixed axes
+        this.fixed = { x : 0, y : 0 }
         // weight
         this.weight = 50
         // current collide objects
@@ -88,7 +93,8 @@ Gravity.Object = class {
         this.set(options || {})
     }
     // method to set options
-    set(options) {
+    set() {
+        const options = _Gravity_.getSetOptions(arguments)
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
         // update physical flag if given
@@ -97,6 +103,10 @@ Gravity.Object = class {
         if('friction' in options) { this.friction = options.friction }
         // update elasticity if given
         if('elasticity' in options) { this.elasticity = options.elasticity }
+        // update velocity if given
+        if('velocity' in options) { this.velocity = options.velocity }
+        // update fixed axes if given
+        if('fixed' in options) { this.fixed = options.fixed }
         // update weight if given
         if('weight' in options) { this.weight = options.weight }
         // update visibility flag if given
@@ -131,5 +141,33 @@ Gravity.Object = class {
             // update element texture
             this.element.setAttribute('texture', this.texture.id)
         }
+    }
+}
+
+// gravity helpers
+const _Gravity_ = {}
+
+// helper to map set options
+_Gravity_.getSetOptions = args => {
+    // return if no args
+    if(args.length === 0) { return {} }
+    // check args length
+    if(args.length === 1 && typeof args[0] === 'object' && args[1] !== null) {
+        // return first as object
+        return args[0]
+    } else if(args.length === 2 && typeof args[0] === 'string') {
+        // output object
+        const out = {}
+        // set single value option
+        out[args[0]] = args[1]
+        // return output
+        return out
+    } else if(args.length === 3 && typeof args[0] === 'string') {
+        // output object
+        const out = {}
+        // set multi value option
+        out[args[0]] = { x : args[1], y : args[2] }
+        // return output
+        return out
     }
 }
