@@ -178,6 +178,8 @@ Gravity.Texture = class {
         this.image = null
         // scale of image
         this.scale = { x : 1, y : 1 }
+        // position of image
+        this.position = { x : 'center', y : 'center' }
         // repetition of image
         this.repeat = { x : true, y : true }
         // flip of image
@@ -205,6 +207,8 @@ Gravity.Texture = class {
         if('image' in options) { this.image = options.image }
         // update scale if given
         if('scale' in options) { this.scale = options.scale }
+        // update position if given
+        if('position' in options) { this.position = options.position }
         // update repeat if given
         if('repeat' in options) { this.repeat = options.repeat }
         // update flip if given
@@ -256,6 +260,13 @@ Gravity.Texture = class {
                         : !this.flip.x && this.flip.y ? '1, -1'
                         : '1, 1'
                 });
+                background-position: ${
+                    typeof this.position.x === 'number' ? this.position.x + 'px'
+                    : this.position.x
+                }, ${
+                    typeof this.position.y === 'number' ? this.position.y + 'px'
+                    : this.position.y
+                };
             }
         `
     }
@@ -329,7 +340,7 @@ Gravity.Animation = class {
                 }
             `
         }
-        // filter each texture uses animation
+        // filter textures that uses this animation
         const textures = Gravity.Texture.list.filter(x => x.animation === this)
         // for each texture
         for(let i = 0; i < textures.length; i++) {
@@ -341,6 +352,28 @@ Gravity.Animation = class {
                 texture.set('animation', this)
             }
         }
+    }
+}
+
+// asset loader class
+Gravity.AssetLoader = class {
+    // constructor
+    constructor() {
+        // busy flag
+        this.busy = false
+    }
+    // method to load assets
+    load(input, progess = () => {}, complete = () => {}, error = () => {}) {
+        // return if busy or update busy flag
+        if(this.busy) { return } else { this.busy = true }
+        // load assets with callback functions
+        _Gravity_.loadAssets(input, progess, complete, error).then(() => {
+            // update busy flag
+            this.busy = false
+        }).catch(() => {
+            // update busy flag
+            this.busy = false
+        })
     }
 }
 
@@ -393,3 +426,58 @@ _Gravity_.createID = () => {
 
 // list of previous ids
 _Gravity_.createID.list = []
+
+// method to load all assets
+_Gravity_.loadAssets = async(input, progess, complete, error) => {
+    // items array
+    const items = []
+    // keys of object
+    const keys = Object.keys(input)
+    // for each key
+    for(let i = 0; i < keys.length; i++) {
+        // current key
+        const key = keys[i]
+        // current value
+        const val = input[key]
+        // check value type
+        if(Array.isArray(val)) {
+            // for each item in array
+            for(let j = 0; j < val.length; j++) {
+                // push to items
+                items.push({ file : val[j], key : key, index : j })
+            }
+        } else if(typeof val === 'string') {
+            // push to items
+            items.push({ file : val, key : key })
+        }
+    }
+    // for each item in array
+    for(let i = 0; i < items.length; i++) {
+        // current item
+        const item = items[i]
+        // load image
+        const blob = await _Gravity_.loadImage(item.file).catch(error)
+        Array.isArray(input[item.key])
+            ? input[item.key][item.index] = blob
+            : input[item.key] = blob
+        // progess callback
+        progess({ loaded : i + 1, total : items.length, file : item.file })
+    }
+    // complete callback
+    complete(input)
+}
+
+// method to load image
+_Gravity_.loadImage = url => {
+    // return promise
+    return new Promise((resolve, reject) => {
+        // create new image
+        const img = new Image()
+        // resolve callback
+        img.addEventListener('load', () => resolve(url))
+        // error callback
+        img.addEventListener('error', reject)
+        // set image url
+        img.src = url
+    })
+}
