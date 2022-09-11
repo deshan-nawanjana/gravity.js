@@ -93,6 +93,8 @@ Gravity.Object = class {
         this.collide = []
         // visibility flag
         this.visible = true
+        // render index
+        this.index = 0
         // position
         this.position = { x : 0, y : 0 }
         // size
@@ -126,6 +128,13 @@ Gravity.Object = class {
             this.visible = options.visible
             // update element visibility
             this.element.style.display = this.visible ? 'block' : 'none'
+        }
+        // update index if given
+        if('index' in options) {
+            // update index flag
+            this.index = options.index
+            // update element index
+            this.element.style.zIndex = this.index
         }
         // update position if given
         if('position' in options) {
@@ -175,10 +184,16 @@ Gravity.Texture = class {
         this.flip = { x : false, y : false }
         // animation
         this.animation = null
-        // set options
-        this.set(options || {})
+        // append style node
+        this.element.appendChild(document.createTextNode(' '))
+        // append animation node
+        this.element.appendChild(document.createTextNode(' '))
         // append style element to head
         document.head.appendChild(this.element)
+        // push to texture list
+        Gravity.Texture.list.push(this)
+        // set options
+        this.set(options || {})
     }
     // method to set options
     set() {
@@ -187,7 +202,7 @@ Gravity.Texture = class {
         // update color if given
         if('color' in options) { this.color = options.color }
         // update image if given
-        if('image' in options) { this.image = encodeURI(options.image) }
+        if('image' in options) { this.image = options.image }
         // update scale if given
         if('scale' in options) { this.scale = options.scale }
         // update repeat if given
@@ -195,12 +210,39 @@ Gravity.Texture = class {
         // update flip if given
         if('flip' in options) { this.flip = options.flip }
         // update animation if given
-        if('animation' in options) { this.animation = options.animation }
-        // generate and set on style element
-        this.element.innerHTML = `
+        if('animation' in options) {
+            // update animation
+            this.animation = options.animation
+            if(this.animation) {
+                // generate animation node
+                this.element.childNodes[1].data = `
+                    [texture="${ this.id }"] {
+                        animation-name: ${ this.animation.id };
+                        animation-duration: ${ this.animation.duration }s;
+                        animation-delay: ${ this.animation.delay }s;
+                        animation-direction: ${
+                            this.animation.reverse ? 'reverse' : 'normal'
+                        };
+                        animation-iteration-count: ${
+                            this.animation.loop === true ? 'infinite'
+                                : this.animation.loop === false
+                                    ? '1' : this.animation.loop
+                        };
+                    }
+                `
+            } else {
+                // remove animation rules
+                this.element.childNodes[1].data = ''
+            }
+        }
+        // generate style node
+        this.element.childNodes[0].data = `
             [texture="${ this.id }"] {
                 background-color: ${ this.color || 'transparent' };
-                background-image: ${ this.image ? `url(${ this.image })` : 'none' };
+                background-image: ${
+                    this.image ? `url(${ encodeURI(this.image) })`
+                    : 'none'
+                };
                 background-size: ${ this.scale.x * 100 }% ${ this.scale.y * 100 }%;
                 background-repeat: ${
                     this.repeat.x && this.repeat.y ? 'repeat'
@@ -216,6 +258,89 @@ Gravity.Texture = class {
                 });
             }
         `
+    }
+}
+
+// list of textures
+Gravity.Texture.list = []
+
+// animation class
+Gravity.Animation = class {
+    // constructor
+    constructor(options) {
+        // texture id
+        this.id = _Gravity_.createID()
+        // create style element
+        this.element = document.createElement('style')
+        // duration in seconds
+        this.duration = 1
+        // delay in seconds
+        this.delay = 0
+        // reverse flag
+        this.reverse = false
+        // loop flag
+        this.loop = true
+        // colors array
+        this.colors = []
+        // images array
+        this.images = []
+        // set options
+        this.set(options || {})
+        // append style element to head
+        document.head.appendChild(this.element)
+    }
+    // method to set options
+    set() {
+        // get options by arguments
+        const options = _Gravity_.getSetOptions(arguments)
+        // update duration if given
+        if('duration' in options) { this.duration = options.duration }
+        // update delay if given
+        if('delay' in options) { this.delay = options.delay }
+        // update reverse if given
+        if('reverse' in options) { this.reverse = options.reverse }
+        // update loop if given
+        if('loop' in options) { this.loop = options.loop }
+        // update images if given
+        if('images' in options || 'colors' in options) {
+            // update images
+            this.images = options.images || this.images
+            // update colors
+            this.colors = options.colors || this.colors
+            // generate and set on style element
+            this.element.innerHTML = `
+                @keyframes ${ this.id } {
+                    ${ this.images.map((image, i, r) => {
+                        const color = this.colors[i]
+                        return `${ i * 100 / r.length }% {
+                            background-image: ${ image ? `url(${ encodeURI(image) })` : 'none' };
+                            background-color: ${ color ? color : 'transparent' };
+                        }`
+                    }).join('\n') }
+
+                    100% {${(() => {
+                        const image = this.images[0] || 'none'
+                        const color = this.colors[0] || 'transparent'
+                        return `
+                            background-image: ${ image ? `url(${ encodeURI(image) })` : 'none' };
+                            background-color: ${ color ? color : 'transparent' };
+                        `
+                    })()}}
+                }
+            `
+        }
+        // filter each texture uses animation
+        const textures = Gravity.Texture.list.filter(x => x.animation === this)
+        // for each texture
+        for(let i = 0; i < textures.length; i++) {
+            // current texture
+            const texture = textures[i]
+            // if texture is ready to update
+            if(texture.element.childNodes.length === 2) {
+                // update current texture
+                texture.set('animation', this)
+            }
+        }
     }
 }
 
