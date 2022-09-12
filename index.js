@@ -830,7 +830,7 @@ _Gravity_.updateCollisions = (child_1, objects) => {
             collide.push(child_2)
         }
     }
-    // filter collidestart event
+    // filter collidestart events
     const csa = child_1.events.filter(x => x.type === 'collidestart')
     // if events available
     if(csa.length > 0) {
@@ -841,11 +841,11 @@ _Gravity_.updateCollisions = (child_1, objects) => {
             // for each object
             for(let j = 0; j < cs.length; j++) {
                 // callback event
-                csa[i].callback({ type : 'collidestart', object : cs[j] })
+                csa[i].callback({ type : 'collidestart', object : cs[j], timeStamp : Date.now() })
             }
         }
     }
-    // filter collide event
+    // filter collide events
     const coa = child_1.events.filter(x => x.type === 'collide')
     // if events available
     if(coa.length > 0) {
@@ -856,11 +856,11 @@ _Gravity_.updateCollisions = (child_1, objects) => {
             // for each object
             for(let j = 0; j < co.length; j++) {
                 // callback event
-                coa[i].callback({ type : 'collide', object : co[j] })
+                coa[i].callback({ type : 'collide', object : co[j], timeStamp : Date.now() })
             }
         }
     }
-    // filter collideend event
+    // filter collideend events
     const cea = child_1.events.filter(x => x.type === 'collideend')
     // if events available
     if(cea.length > 0) {
@@ -871,8 +871,42 @@ _Gravity_.updateCollisions = (child_1, objects) => {
             // for each object
             for(let j = 0; j < ce.length; j++) {
                 // callback event
-                cea[i].callback({ type : 'collide', object : ce[j] })
+                cea[i].callback({ type : 'collide', object : ce[j], timeStamp : Date.now() })
             }
+        }
+    }
+    // filter active old collide objects
+    const aold = child_1.collide.filter(x => x.active)
+    // filter active new collide objects
+    const anew = collide.filter(x => x.active)
+    // filter floatstart events
+    const fsa = child_1.events.filter(x => x.type === 'floatstart')
+    // if events available
+    if(fsa.length > 0 && anew.length === 0 && aold.length > 0) {
+        // for each event
+        for(let i = 0; i < fsa.length; i++) {
+            // callback event
+            fsa[i].callback({ type : 'floatstart', timeStamp : Date.now() })
+        }
+    }
+    // filter float events
+    const foa = child_1.events.filter(x => x.type === 'float')
+    // if events available
+    if(foa.length > 0 && anew.length === 0 && aold.length === 0) {
+        // for each event
+        for(let i = 0; i < foa.length; i++) {
+            // callback event
+            foa[i].callback({ type : 'float', timeStamp : Date.now() })
+        }
+    }
+    // filter floatend events
+    const fea = child_1.events.filter(x => x.type === 'floatend')
+    // if events available
+    if(fea.length > 0 && anew.length > 0 && aold.length === 0) {
+        // for each event
+        for(let i = 0; i < fea.length; i++) {
+            // callback event
+            fea[i].callback({ type : 'floatend', timeStamp : Date.now() })
         }
     }
     // update collide array
