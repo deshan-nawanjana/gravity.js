@@ -202,9 +202,13 @@ Gravity.Object = class {
         this.events.push({ type : type, callback : callback })
     }
     // method to clone
-    clone() {
-        // return cloned object
-        return new Gravity.Object(this)
+    clone(...options) {
+        // clone object
+        const obj = new Gravity.Object(this)
+        // setup with options
+        obj.set(...options)
+        // return clone
+        return obj
     }
 }
 
@@ -320,9 +324,13 @@ Gravity.Texture = class {
         `
     }
     // method to clone
-    clone() {
-        // return cloned texture
-        return new Gravity.Texture(this)
+    clone(...options) {
+        // clone texture
+        const obj = new Gravity.Texture(this)
+        // setup with options
+        obj.set(...options)
+        // return clone
+        return obj
     }
 }
 
@@ -379,9 +387,13 @@ Gravity.Animation = class {
         }
     }
     // method to clone
-    clone() {
-        // return cloned animation
-        return new Gravity.Animation(this)
+    clone(...options) {
+        // clone animation
+        const obj = new Gravity.Animation(this)
+        // setup with options
+        obj.set(...options)
+        // return clone
+        return obj
     }
 }
 
