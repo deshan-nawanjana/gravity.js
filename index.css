@@ -18,6 +18,10 @@ gravity > obj {
     height: 50px;
 }
 
+gravity[paused] > obj {
+    animation-play-state: paused !important;
+}
+
 gravity-cache > img {
     width: 10px;
     height: 10px;

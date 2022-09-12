@@ -19,6 +19,8 @@ Gravity.Scene = class {
         this.size = { x : 400, y : 300 }
         // color
         this.color = null
+        // paused flag
+        this.paused = false
         // add cursor events
         _Gravity_.addCursorEvents(this)
         // set options
@@ -71,7 +73,30 @@ Gravity.Scene = class {
     }
     // method to render frame
     render() {
-        _Gravity_.updateMotion(this)
+        // check paused state
+        if(this.paused === false) {
+            // update motions
+            _Gravity_.updateMotion(this)
+            // return true
+            return true
+        } else {
+            // return false
+            return false
+        }
+    }
+    // method to pause rendering
+    pause() {
+        // stop keyframes
+        this.element.setAttribute('paused', '')
+        // update paused flag
+        this.paused = true
+    }
+    // method to play rendering
+    play() {
+        // resume keyframes
+        this.element.removeAttribute('paused')
+        // update paused flag
+        this.paused = false
     }
 }
 
