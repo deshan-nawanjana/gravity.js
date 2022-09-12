@@ -220,8 +220,8 @@ Gravity.Texture = class {
         this.color = null
         // image
         this.image = null
-        // scale of image
-        this.scale = { x : 1, y : 1 }
+        // size of image
+        this.size = { x : 'auto', y : 'auto' }
         // position of image
         this.position = { x : 'center', y : 'center' }
         // repetition of image
@@ -253,8 +253,8 @@ Gravity.Texture = class {
         if('color' in options) { this.color = options.color }
         // update image if given
         if('image' in options) { this.image = options.image }
-        // update scale if given
-        if('scale' in options) { this.scale = options.scale }
+        // update size if given
+        if('size' in options) { this.size = options.size }
         // update position if given
         if('position' in options) { this.position = options.position }
         // update repeat if given
@@ -279,7 +279,11 @@ Gravity.Texture = class {
                     this.image ? `url(${ encodeURI(this.image) })`
                     : 'none'
                 };
-                background-size: ${ this.scale.x * 100 }% ${ this.scale.y * 100 }%;
+                background-size: ${
+                    typeof this.size.x === 'number' ? this.size.x + 'px' : this.size.x
+                } ${
+                    typeof this.size.y === 'number' ? this.size.y + 'px' : this.size.y
+                };
                 background-repeat: ${
                     this.repeat.x && this.repeat.y ? 'repeat'
                         : this.repeat.x && !this.repeat.y ? 'repeat-x'
@@ -295,7 +299,7 @@ Gravity.Texture = class {
                 background-position: ${
                     typeof this.position.x === 'number' ? this.position.x + 'px'
                     : this.position.x
-                }, ${
+                } ${
                     typeof this.position.y === 'number' ? this.position.y + 'px'
                     : this.position.y
                 };
@@ -387,18 +391,28 @@ Gravity.AssetLoader = class {
     constructor() {
         // busy flag
         this.busy = false
+        // create cache element
+        this.element = document.createElement('gravity-cache')
+        // append to body
+        document.body.appendChild(this.element)
     }
     // method to load assets
-    load(input, progess = () => {}, complete = () => {}, error = () => {}) {
-        // return if busy or update busy flag
-        if(this.busy) { return } else { this.busy = true }
-        // load assets with callback functions
-        _Gravity_.loadAssets(input, progess, complete, error).then(() => {
-            // update busy flag
-            this.busy = false
-        }).catch(() => {
-            // update busy flag
-            this.busy = false
+    load(input, progess = () => {}) {
+        return new Promise((resolve, reject) => {
+            // return if busy or update busy flag
+            if(this.busy) { return } else { this.busy = true }
+            // load assets with callback functions
+            _Gravity_.loadAssets(input, progess, this.element).then(() => {
+                // update busy flag
+                this.busy = false
+                // callback complete
+                resolve(input)
+            }).catch((e) => {
+                // update busy flag
+                this.busy = false
+                // callback error
+                reject(e)
+            })
         })
     }
 }
@@ -510,7 +524,7 @@ _Gravity_.createID = () => {
 _Gravity_.createID.list = []
 
 // helper to load all assets
-_Gravity_.loadAssets = async(input, progess, complete, error) => {
+_Gravity_.loadAssets = async(input, progess, element) => {
     // items array
     const items = []
     // keys of object
@@ -538,19 +552,19 @@ _Gravity_.loadAssets = async(input, progess, complete, error) => {
         // current item
         const item = items[i]
         // load image
-        const blob = await _Gravity_.loadImage(item.file).catch(error)
+        const blob = await _Gravity_.loadImage(item.file, element)
         Array.isArray(input[item.key])
             ? input[item.key][item.index] = blob
             : input[item.key] = blob
         // progess callback
         progess({ loaded : i + 1, total : items.length, file : item.file })
     }
-    // complete callback
-    complete(input)
+    // return input
+    return input
 }
 
 // helper to load image
-_Gravity_.loadImage = url => {
+_Gravity_.loadImage = (url, element) => {
     // return promise
     return new Promise((resolve, reject) => {
         // create new image
@@ -559,6 +573,8 @@ _Gravity_.loadImage = url => {
         img.addEventListener('load', () => resolve(url))
         // error callback
         img.addEventListener('error', reject)
+        // append to cache element
+        element.appendChild(img)
         // set image url
         img.src = url
     })
