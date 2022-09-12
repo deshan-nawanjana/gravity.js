@@ -79,8 +79,8 @@ Gravity.Object = class {
     constructor(options) {
         // create element
         this.element = document.createElement('obj')
-        // physically enabled flag
-        this.physical = true
+        // physically active flag
+        this.active = true
         // friction factor
         this.friction = 0.05
         // elasticity
@@ -120,8 +120,8 @@ Gravity.Object = class {
         if(options === null) { return }
         // return if null or non object input
         if(options === null || typeof options !== 'object') { return }
-        // update physical flag if given
-        if('physical' in options) { this.physical = options.physical }
+        // update active flag if given
+        if('active' in options) { this.active = options.active }
         // update friction if given
         if('friction' in options) { this.friction = options.friction }
         // update elasticity if given
@@ -628,8 +628,8 @@ _Gravity_.updateMotion = scene => {
     for(let i = 0; i < objects.length; i++) {
         // current child
         const child = objects[i]
-        // only if physics is enabled
-        if(child.physical) {
+        // update motion on active objects
+        if(child.active) {
             // check for fall of gravity
             if(child.fixed.y === false) {
                 // update velocity
@@ -648,8 +648,11 @@ _Gravity_.updateMotion = scene => {
                 // constant vertical movement
                 child.position.x += child.velocity.x
             }
-            // update collisions
-            _Gravity_.updateCollisions(child, objects)
+        }
+        // check and update collisions
+        _Gravity_.updateCollisions(child, objects)
+        // update friction on active objects
+        if(child.active) {
             if(child.fixed.x === false) {
                 // check collide object
                 if(child.collide.length > 0) {
@@ -695,8 +698,6 @@ _Gravity_.updateCollisions = (child_1, objects) => {
         const child_2 = objects[i]
         // continue if same child
         if(child_1 === child_2) { continue }
-        // continue physics not enabled
-        if(child_2.physical === false) { continue }
         // child positions
         const w = child_2.position.y
         const x = child_2.position.x + child_2.size.x
@@ -704,122 +705,125 @@ _Gravity_.updateCollisions = (child_1, objects) => {
         const z = child_2.position.x
         // get collide details
         const s = _Gravity_.getCollideState(a, b, c, d, w, x, y, z)
-        // bounce methods
-        const bounce = {
-            top() {
-                // if object not fully fixed
-                if(child_1.fixed.y === false || child_1.fixed.y === false) {
-                    // reset object position
-                    child_1.position.y = w - child_1.size.y
-                }
-                // calculate velocities after collision
-                const velo = _Gravity_.getCollideValues(child_1, child_2, 'y')
-                // check objects fixed states
-                if(child_1.fixed.y === false && child_2.fixed.y === false) {
-                    // update object velocity
-                    child_1.velocity.y = velo.v1 * child_1.elasticity
-                    // update barrier velocity
-                    child_2.velocity.y = velo.v2 * child_2.elasticity
-                } else if(child_1.fixed.y === false && child_2.fixed.y === true) {
-                    // reverse object velocity
-                    child_1.velocity.y = velo.ut * -1 * child_1.elasticity
-                } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
-                    // reverse barrier velocity
-                    child_2.velocity.y = velo.ut * -1 * child_2.elasticity
-                }
-            },
-            bottom() {
-                // if object not fully fixed
-                if(child_1.fixed.y === false || child_1.fixed.y === false) {
-                    // reset object position
-                    child_1.position.y = y
-                }
-                // calculate velocities after collision
-                const velo = _Gravity_.getCollideValues(child_1, child_2, 'y')
-                // check objects fixed states
-                if(child_1.fixed.y === false && child_2.fixed.y === false) {
-                    // update object velocity
-                    child_1.velocity.y = velo.v1 * child_1.elasticity
-                    // update barrier velocity
-                    child_2.velocity.y = velo.v2 * child_2.elasticity
-                } else if(child_1.fixed.y === false && child_2.fixed.y === true) {
-                    // reverse object velocity
-                    child_1.velocity.y = velo.ut * child_1.elasticity
-                } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
-                    // reverse barrier velocity
-                    child_2.velocity.y = velo.ut * child_2.elasticity
-                }
-            },
-            left() {
-                // if object not fully fixed
-                if(child_1.fixed.x === false || child_1.fixed.y === false) {
-                    // reset object position
-                    child_1.position.x = z - child_1.size.x
-                }
-                // calculate velocities after collision
-                const velo = _Gravity_.getCollideValues(child_1, child_2, 'x')
-                // check objects fixed states
-                if(child_1.fixed.x === false && child_2.fixed.x === false) {
-                    // update object velocity
-                    child_1.velocity.x = velo.v1 * child_1.elasticity
-                    // update barrier velocity
-                    child_2.velocity.x = velo.v2 * child_2.elasticity
-                } else if(child_1.fixed.x === false && child_2.fixed.x === true) {
-                    // reverse object velocity
-                    child_1.velocity.x = velo.vt * child_1.elasticity
-                } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
-                    // reverse barrier velocity
-                    child_2.velocity.x = velo.vt * child_2.elasticity
-                }
-            },
-            right() {
-                // if object not fully fixed
-                if(child_1.fixed.x === false || child_1.fixed.y === false) {
-                    // reset object position
-                    child_1.position.x = x
-                }
-                // calculate velocities after collision
-                const velo = _Gravity_.getCollideValues(child_1, child_2, 'x')
-                // check objects fixed states
-                if(child_1.fixed.x === false && child_2.fixed.x === false) {
-                    // update object velocity
-                    child_1.velocity.x = velo.v1 * child_1.elasticity
-                    // update barrier velocity
-                    child_2.velocity.x = velo.v2 * child_2.elasticity
-                } else if(child_1.fixed.x === false && child_2.fixed.x === true) {
-                    // reverse object velocity
-                    child_1.velocity.x = velo.vt * child_1.elasticity
-                } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
-                    // reverse barrier velocity
-                    child_2.velocity.x = velo.vt * child_2.elasticity
+        // react only for active object
+        if(child_1.active && child_2.active) {
+            // bounce methods
+            const bounce = {
+                top() {
+                    // if object not fully fixed
+                    if(child_1.fixed.y === false || child_1.fixed.y === false) {
+                        // reset object position
+                        child_1.position.y = w - child_1.size.y
+                    }
+                    // calculate velocities after collision
+                    const velo = _Gravity_.getCollideValues(child_1, child_2, 'y')
+                    // check objects fixed states
+                    if(child_1.fixed.y === false && child_2.fixed.y === false) {
+                        // update object velocity
+                        child_1.velocity.y = velo.v1 * child_1.elasticity
+                        // update barrier velocity
+                        child_2.velocity.y = velo.v2 * child_2.elasticity
+                    } else if(child_1.fixed.y === false && child_2.fixed.y === true) {
+                        // reverse object velocity
+                        child_1.velocity.y = velo.ut * -1 * child_1.elasticity
+                    } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
+                        // reverse barrier velocity
+                        child_2.velocity.y = velo.ut * -1 * child_2.elasticity
+                    }
+                },
+                bottom() {
+                    // if object not fully fixed
+                    if(child_1.fixed.y === false || child_1.fixed.y === false) {
+                        // reset object position
+                        child_1.position.y = y
+                    }
+                    // calculate velocities after collision
+                    const velo = _Gravity_.getCollideValues(child_1, child_2, 'y')
+                    // check objects fixed states
+                    if(child_1.fixed.y === false && child_2.fixed.y === false) {
+                        // update object velocity
+                        child_1.velocity.y = velo.v1 * child_1.elasticity
+                        // update barrier velocity
+                        child_2.velocity.y = velo.v2 * child_2.elasticity
+                    } else if(child_1.fixed.y === false && child_2.fixed.y === true) {
+                        // reverse object velocity
+                        child_1.velocity.y = velo.ut * child_1.elasticity
+                    } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
+                        // reverse barrier velocity
+                        child_2.velocity.y = velo.ut * child_2.elasticity
+                    }
+                },
+                left() {
+                    // if object not fully fixed
+                    if(child_1.fixed.x === false || child_1.fixed.y === false) {
+                        // reset object position
+                        child_1.position.x = z - child_1.size.x
+                    }
+                    // calculate velocities after collision
+                    const velo = _Gravity_.getCollideValues(child_1, child_2, 'x')
+                    // check objects fixed states
+                    if(child_1.fixed.x === false && child_2.fixed.x === false) {
+                        // update object velocity
+                        child_1.velocity.x = velo.v1 * child_1.elasticity
+                        // update barrier velocity
+                        child_2.velocity.x = velo.v2 * child_2.elasticity
+                    } else if(child_1.fixed.x === false && child_2.fixed.x === true) {
+                        // reverse object velocity
+                        child_1.velocity.x = velo.vt * child_1.elasticity
+                    } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
+                        // reverse barrier velocity
+                        child_2.velocity.x = velo.vt * child_2.elasticity
+                    }
+                },
+                right() {
+                    // if object not fully fixed
+                    if(child_1.fixed.x === false || child_1.fixed.y === false) {
+                        // reset object position
+                        child_1.position.x = x
+                    }
+                    // calculate velocities after collision
+                    const velo = _Gravity_.getCollideValues(child_1, child_2, 'x')
+                    // check objects fixed states
+                    if(child_1.fixed.x === false && child_2.fixed.x === false) {
+                        // update object velocity
+                        child_1.velocity.x = velo.v1 * child_1.elasticity
+                        // update barrier velocity
+                        child_2.velocity.x = velo.v2 * child_2.elasticity
+                    } else if(child_1.fixed.x === false && child_2.fixed.x === true) {
+                        // reverse object velocity
+                        child_1.velocity.x = velo.vt * child_1.elasticity
+                    } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
+                        // reverse barrier velocity
+                        child_2.velocity.x = velo.vt * child_2.elasticity
+                    }
                 }
             }
-        }
-        // object smaller than barrier
-        if(s.top && !s.right && !s.bottom && !s.left) { bounce.bottom() }
-        if(!s.top && !s.right && s.bottom && !s.left) { bounce.top() }
-        if(!s.top && s.right && !s.bottom && !s.left) { bounce.left() }
-        if(!s.top && !s.right && !s.bottom && s.left) { bounce.right() }
-        // object larger than barrier
-        if(s.top && !s.right && s.bottom && s.left) { bounce.right() }
-        if(s.top && s.right && s.bottom && !s.left) { bounce.left() }
-        if(!s.top && s.right && s.bottom && s.left) { bounce.top() }
-        if(s.top && s.right && !s.bottom && s.left) { bounce.bottom() }
-        // bottom left corner collision
-        if(s.top && s.right && !s.bottom && !s.left) {
-            s.bottomLeft === 'C' ? bounce.bottom() : bounce.left()
-        }
-        // bottom right corner collision
-        if(s.top && !s.right && !s.bottom && s.left) {
-            s.bottomRight === 'C' ? bounce.bottom() : bounce.right()
-        }
-        // top right corner collision
-        if(!s.top && !s.right && s.bottom && s.left) {
-            s.topRight === 'A' ? bounce.top() : bounce.right()
-        }
-        // top left corner collision
-        if(!s.top && s.right && s.bottom && !s.left) {
-            s.topLeft === 'A' ? bounce.top() : bounce.left()
+            // object smaller than barrier
+            if(s.top && !s.right && !s.bottom && !s.left) { bounce.bottom() }
+            if(!s.top && !s.right && s.bottom && !s.left) { bounce.top() }
+            if(!s.top && s.right && !s.bottom && !s.left) { bounce.left() }
+            if(!s.top && !s.right && !s.bottom && s.left) { bounce.right() }
+            // object larger than barrier
+            if(s.top && !s.right && s.bottom && s.left) { bounce.right() }
+            if(s.top && s.right && s.bottom && !s.left) { bounce.left() }
+            if(!s.top && s.right && s.bottom && s.left) { bounce.top() }
+            if(s.top && s.right && !s.bottom && s.left) { bounce.bottom() }
+            // bottom left corner collision
+            if(s.top && s.right && !s.bottom && !s.left) {
+                s.bottomLeft === 'C' ? bounce.bottom() : bounce.left()
+            }
+            // bottom right corner collision
+            if(s.top && !s.right && !s.bottom && s.left) {
+                s.bottomRight === 'C' ? bounce.bottom() : bounce.right()
+            }
+            // top right corner collision
+            if(!s.top && !s.right && s.bottom && s.left) {
+                s.topRight === 'A' ? bounce.top() : bounce.right()
+            }
+            // top left corner collision
+            if(!s.top && s.right && s.bottom && !s.left) {
+                s.topLeft === 'A' ? bounce.top() : bounce.left()
+            }
         }
         // if any collision
         if(s.top || s.right || s.bottom || s.left) {
