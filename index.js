@@ -452,6 +452,18 @@ Gravity.InputMap = class {
             this.keys = this.keys.filter(x => x !== key)
         })
     }
+    // method to check all keys
+    all() {
+        return Array.from(arguments).every(x => this.keys.includes(x))
+    }
+    // method to check any keys
+    any() {
+        return Array.from(arguments).some(x => this.keys.includes(x))
+    }
+    // method to check not any key
+    not() {
+        return !Array.from(arguments).some(x => this.keys.includes(x))
+    }
 }
 
 // gravity helpers
