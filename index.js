@@ -574,6 +574,21 @@ _Gravity_.getCollideState = (a, b, c, d, w, x, y, z) => {
     }
 }
 
+// helper to calculate velocities after collision
+_Gravity_.getCollideValues = (child_1, child_2, direction) => {
+    // weights of objects
+    const m1 = child_1.weight
+    const m2 = child_2.weight
+    // initial velocities
+    const u1 = child_1.velocity[direction]
+    const u2 = child_2.velocity[direction]
+    // velocities after collision
+    const v1 = u1 * (m1 - m2) / (m1 + m2) + u2 * (2 * m2) / (m1 + m2)
+    const v2 = u1 * (2 * m1) / (m1 + m2) + u2 * (m1 - m2) / (m1 + m2)
+    // return calculations
+    return { u1 : u1, u2 : u2, ut : u1 + u2, v1 : v1, v2 : v2, vt : v1 + v2 }
+}
+
 // helper to update motions
 _Gravity_.updateMotion = scene => {
     // objects of scene
@@ -666,12 +681,21 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                     // reset object position
                     child_1.position.y = w - child_1.size.y
                 }
-                // return if fixed vertically
-                if(child_1.fixed.y) { return }
-                // reverse velocity
-                child_1.velocity.y = -Math.abs(child_1.velocity.y) * child_1.elasticity
-                // barrier reverse velocity
-                if(child_2.fixed.y === false) { child_2.velocity.y = child_1.velocity.y * -1 }
+                // calculate velocities after collision
+                const velo = _Gravity_.getCollideValues(child_1, child_2, 'y')
+                // check objects fixed states
+                if(child_1.fixed.y === false && child_2.fixed.y === false) {
+                    // update object velocity
+                    child_1.velocity.y = velo.v1 * child_1.elasticity
+                    // update barrier velocity
+                    child_2.velocity.y = velo.v2 * child_2.elasticity
+                } else if(child_1.fixed.y === false && child_2.fixed.y === true) {
+                    // reverse object velocity
+                    child_1.velocity.y = velo.ut * -1 * child_1.elasticity
+                } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
+                    // reverse barrier velocity
+                    child_2.velocity.y = velo.ut * -1 * child_2.elasticity
+                }
             },
             bottom() {
                 // if object not fully fixed
@@ -679,12 +703,21 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                     // reset object position
                     child_1.position.y = y
                 }
-                // return if fixed vertically
-                if(child_1.fixed.y) { return }
-                // reverse velocity
-                child_1.velocity.y = Math.abs(child_1.velocity.y) * child_1.elasticity
-                // barrier reverse velocity
-                if(child_2.fixed.y === false) { child_2.velocity.y = child_1.velocity.y * -1 }
+                // calculate velocities after collision
+                const velo = _Gravity_.getCollideValues(child_1, child_2, 'y')
+                // check objects fixed states
+                if(child_1.fixed.y === false && child_2.fixed.y === false) {
+                    // update object velocity
+                    child_1.velocity.y = velo.v1 * child_1.elasticity
+                    // update barrier velocity
+                    child_2.velocity.y = velo.v2 * child_2.elasticity
+                } else if(child_1.fixed.y === false && child_2.fixed.y === true) {
+                    // reverse object velocity
+                    child_1.velocity.y = velo.ut * child_1.elasticity
+                } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
+                    // reverse barrier velocity
+                    child_2.velocity.y = velo.ut * child_2.elasticity
+                }
             },
             left() {
                 // if object not fully fixed
@@ -692,16 +725,21 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                     // reset object position
                     child_1.position.x = z - child_1.size.x
                 }
-                // return if fixed horizontally
-                if(child_1.fixed.x) {
-                    // fixed child hit on none fixed barrier
-                    if(child_2.fixed.x === false) { child_2.velocity.x = child_1.velocity.x }
-                    return
+                // calculate velocities after collision
+                const velo = _Gravity_.getCollideValues(child_1, child_2, 'x')
+                // check objects fixed states
+                if(child_1.fixed.x === false && child_2.fixed.x === false) {
+                    // update object velocity
+                    child_1.velocity.x = velo.v1 * child_1.elasticity
+                    // update barrier velocity
+                    child_2.velocity.x = velo.v2 * child_2.elasticity
+                } else if(child_1.fixed.x === false && child_2.fixed.x === true) {
+                    // reverse object velocity
+                    child_1.velocity.x = velo.vt * child_1.elasticity
+                } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
+                    // reverse barrier velocity
+                    child_2.velocity.x = velo.vt * child_2.elasticity
                 }
-                // reverse velocity
-                child_1.velocity.x = -Math.abs(child_1.velocity.x) * child_1.elasticity
-                // barrier reverse velocity
-                if(child_2.fixed.x === false) { child_2.velocity.x = child_1.velocity.x * -1 }
             },
             right() {
                 // if object not fully fixed
@@ -709,16 +747,21 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                     // reset object position
                     child_1.position.x = x
                 }
-                // return if fixed horizontally
-                if(child_1.fixed.x) {
-                    // fixed child hit on none fixed barrier
-                    if(child_2.fixed.x === false) { child_2.velocity.x = child_1.velocity.x }
-                    return
+                // calculate velocities after collision
+                const velo = _Gravity_.getCollideValues(child_1, child_2, 'x')
+                // check objects fixed states
+                if(child_1.fixed.x === false && child_2.fixed.x === false) {
+                    // update object velocity
+                    child_1.velocity.x = velo.v1 * child_1.elasticity
+                    // update barrier velocity
+                    child_2.velocity.x = velo.v2 * child_2.elasticity
+                } else if(child_1.fixed.x === false && child_2.fixed.x === true) {
+                    // reverse object velocity
+                    child_1.velocity.x = velo.vt * child_1.elasticity
+                } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
+                    // reverse barrier velocity
+                    child_2.velocity.x = velo.vt * child_2.elasticity
                 }
-                // reverse velocity
-                child_1.velocity.x = Math.abs(child_1.velocity.x) * child_1.elasticity
-                // barrier reverse velocity
-                if(child_2.fixed.x === false) { child_2.velocity.x = child_1.velocity.x * -1 }
             }
         }
         // object smaller than barrier
