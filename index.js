@@ -103,6 +103,8 @@ Gravity.Object = class {
         this.size = { x : 50, y : 50 }
         // texture
         this.texture = null
+        // outline helper
+        this.outline = false
         // set options
         this.set(options || {})
     }
@@ -164,6 +166,25 @@ Gravity.Object = class {
             this.texture = options.texture
             // update element texture
             this.element.setAttribute('texture', this.texture.id)
+        }
+        // update outline if given
+        if('outline' in options) {
+            // update outline
+            this.outline = options.outline
+            // check outline value
+            if(this.outline) {
+                // outline as flag
+                if(this.outline === true) {
+                    // show object outline
+                    this.element.style.boxShadow = 'inset 0px 0px 0px 1px #F00'
+                } else {
+                    // show object outline
+                    this.element.style.boxShadow = 'inset 0px 0px 0px 1px ' + this.outline
+                }
+            } else {
+                // hide object outline
+                this.element.style.boxShadow = ''
+            }
         }
     }
     // method to clone
