@@ -17,8 +17,8 @@ Gravity.Scene = class {
         this.position = { x : 0, y : 0 }
         // size of scene
         this.size = { x : 400, y : 300 }
-        // texture
-        this.texture = null
+        // color
+        this.color = null
         // set options
         this.set(options || {})
     }
@@ -45,12 +45,12 @@ Gravity.Scene = class {
             // update element height
             this.element.style.height = this.size.y + 'px'
         }
-        // update texture if given
-        if('texture' in options) {
-            // texture size
-            this.texture = options.texture
-            // update element texture
-            this.element.setAttribute('texture', this.texture.id)
+        // update color if given
+        if('color' in options) {
+            // update color
+            this.color = options.color
+            // update element color
+            this.element.style.backgroundColor = this.color || 'transparent'
         }
     }
     // method to add objects
