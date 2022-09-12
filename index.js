@@ -105,6 +105,10 @@ Gravity.Object = class {
         this.texture = null
         // outline helper
         this.outline = false
+        // tags array
+        this.tags = []
+        // events array
+        this.events = []
         // set options
         this.set(options || {})
     }
@@ -186,6 +190,12 @@ Gravity.Object = class {
                 this.element.style.boxShadow = ''
             }
         }
+        // update tags if given
+        if('tags' in options) { this.tags = options.tags }
+    }
+    // method to add event
+    addEvent(type, callback) {
+        this.events.push({ type : type, callback : callback })
     }
     // method to clone
     clone() {
@@ -814,6 +824,51 @@ _Gravity_.updateCollisions = (child_1, objects) => {
         // if any collision
         if(s.top || s.right || s.bottom || s.left) {
             collide.push(child_2)
+        }
+    }
+    // filter collidestart event
+    const csa = child_1.events.filter(x => x.type === 'collidestart')
+    // if events available
+    if(csa.length > 0) {
+        // filter collidestart objects
+        const cs = collide.filter(x => child_1.collide.includes(x) === false)
+        // for each event
+        for(let i = 0; i < csa.length; i++) {
+            // for each object
+            for(let j = 0; j < cs.length; j++) {
+                // callback event
+                csa[i].callback({ type : 'collidestart', object : cs[j] })
+            }
+        }
+    }
+    // filter collide event
+    const coa = child_1.events.filter(x => x.type === 'collide')
+    // if events available
+    if(coa.length > 0) {
+        // filter collide objects
+        const co = collide.filter(x => child_1.collide.includes(x))
+        // for each event
+        for(let i = 0; i < coa.length; i++) {
+            // for each object
+            for(let j = 0; j < co.length; j++) {
+                // callback event
+                coa[i].callback({ type : 'collide', object : co[j] })
+            }
+        }
+    }
+    // filter collideend event
+    const cea = child_1.events.filter(x => x.type === 'collideend')
+    // if events available
+    if(cea.length > 0) {
+        // filter collideend objects
+        const ce = child_1.collide.filter(x => collide.includes(x) === false)
+        // for each event
+        for(let i = 0; i < cea.length; i++) {
+            // for each object
+            for(let j = 0; j < ce.length; j++) {
+                // callback event
+                cea[i].callback({ type : 'collide', object : ce[j] })
+            }
         }
     }
     // update collide array
