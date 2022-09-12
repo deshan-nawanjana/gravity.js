@@ -772,7 +772,9 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                         child_1.velocity.y = velo.ut * -1 * child_1.elasticity
                     } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
                         // reverse barrier velocity
-                        child_2.velocity.y = velo.ut * -1 * child_2.elasticity
+                        if(child_1.velocity.y > 0) {
+                            child_2.velocity.y = velo.ut * -1 * child_2.elasticity
+                        }
                     }
                 },
                 bottom() {
@@ -794,7 +796,9 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                         child_1.velocity.y = velo.ut * child_1.elasticity
                     } else if(child_1.fixed.y === true && child_2.fixed.y === false) {
                         // reverse barrier velocity
-                        child_2.velocity.y = velo.ut * child_2.elasticity
+                        if(child_1.velocity.y > 0) {
+                            child_2.velocity.y = velo.ut * child_2.elasticity
+                        }
                     }
                 },
                 left() {
@@ -816,7 +820,9 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                         child_1.velocity.x = velo.vt * child_1.elasticity
                     } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
                         // reverse barrier velocity
-                        child_2.velocity.x = velo.vt * child_2.elasticity
+                        if(child_1.velocity.x > 0) {
+                            child_2.velocity.x = velo.vt * child_2.elasticity
+                        }
                     }
                 },
                 right() {
@@ -838,7 +844,9 @@ _Gravity_.updateCollisions = (child_1, objects) => {
                         child_1.velocity.x = velo.vt * child_1.elasticity
                     } else if(child_1.fixed.x === true && child_2.fixed.x === false) {
                         // reverse barrier velocity
-                        child_2.velocity.x = velo.vt * child_2.elasticity
+                        if(child_1.velocity.x > 0) {
+                            child_2.velocity.x = velo.vt * child_2.elasticity
+                        }
                     }
                 }
             }
