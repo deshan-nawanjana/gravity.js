@@ -19,6 +19,8 @@ Gravity.Scene = class {
         this.size = { x : 400, y : 300 }
         // color
         this.color = null
+        // add cursor events
+        _Gravity_.addCursorEvents(this)
         // set options
         this.set(options || {})
     }
@@ -109,6 +111,8 @@ Gravity.Object = class {
         this.tags = []
         // events array
         this.events = []
+        // store on element
+        this.element._gravity = this
         // set options
         this.set(options || {})
     }
@@ -886,7 +890,11 @@ _Gravity_.updateCollisions = (child_1, objects) => {
         // for each event
         for(let i = 0; i < fsa.length; i++) {
             // callback event
-            fsa[i].callback({ type : 'floatstart', timeStamp : Date.now() })
+            fsa[i].callback({
+                type : 'floatstart',
+                object : child_1,
+                timeStamp : Date.now()
+            })
         }
     }
     // filter float events
@@ -896,7 +904,11 @@ _Gravity_.updateCollisions = (child_1, objects) => {
         // for each event
         for(let i = 0; i < foa.length; i++) {
             // callback event
-            foa[i].callback({ type : 'float', timeStamp : Date.now() })
+            foa[i].callback({
+                type : 'float',
+                object : child_1,
+                timeStamp : Date.now()
+            })
         }
     }
     // filter floatend events
@@ -906,9 +918,51 @@ _Gravity_.updateCollisions = (child_1, objects) => {
         // for each event
         for(let i = 0; i < fea.length; i++) {
             // callback event
-            fea[i].callback({ type : 'floatend', timeStamp : Date.now() })
+            fea[i].callback({
+                type : 'floatend',
+                object : child_1,
+                timeStamp : Date.now()
+            })
         }
     }
     // update collide array
     child_1.collide = collide
+}
+
+// helper to add cursor events on root element
+_Gravity_.addCursorEvents = scene => {
+    // types of mouse events
+    const types = [
+        'click',
+        'mousedown',
+        'mouseup',
+        'mousemove',
+        'mouseenter',
+        'mouseout'
+    ]
+    // for each event type
+    for(let t = 0; t < types.length; t++) {
+        // current type
+        const type = types[t]
+        // create event listener
+        scene.element.addEventListener(type, e => {
+            // get target object
+            const object = e.target._gravity
+            // if object available
+            if(object) {
+                // get click events
+                const events = object.events.filter(x => x.type === type)
+                // for each event
+                for(let i = 0; i < events.length; i++) {
+                    // callback event
+                    events[i].callback({
+                        type : type,
+                        object : object,
+                        timeStamp : Date.now(),
+                        nativeEvent : e
+                    })
+                }
+            }
+        })
+    }
 }
