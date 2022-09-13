@@ -746,9 +746,20 @@ _Gravity_.updateMotion = scene => {
         }
         // child element
         const element = child.element
-        // update position
-        element.style.left = child.position.x + scene.position.x + 'px'
-        element.style.top = child.position.y + scene.position.y + 'px'
+        // if any x position change
+        if(child.position.x + scene.position.x !== child.position._x) {
+            // update x position
+            element.style.left = child.position.x + scene.position.x + 'px'
+            // store last position
+            child.position._x = child.position.x + scene.position.x
+        }
+        // if any y position change
+        if(child.position.y + scene.position.y !== child.position._y) {
+            // update y position
+            element.style.top = child.position.y + scene.position.y + 'px'
+            // store last position
+            child.position._y = child.position.y + scene.position.y
+        }
     }
 }
 
