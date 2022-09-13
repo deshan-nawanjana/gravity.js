@@ -136,6 +136,10 @@ Gravity.Object = class {
         this.tags = []
         // events array
         this.events = []
+        // text content
+        this.text = ''
+        // style class name
+        this.style = null
         // store on element
         this.element._gravity = this
         // set options
@@ -221,6 +225,26 @@ Gravity.Object = class {
         }
         // update tags if given
         if('tags' in options) { this.tags = options.tags }
+        // update text content if given
+        if('text' in options) {
+            // update text
+            this.text = options.text
+            // update inner html
+            this.element.innerHTML = this.text
+        }
+        // update style class if given
+        if('style' in options) {
+            // update style
+            this.style = options.style
+            // check class name
+            if(this.style) {
+                // set class name
+                this.element.className = this.style
+            } else {
+                // remove class attribute
+                this.element.removeAttribute('class')
+            }
+        }
     }
     // method to add event
     addEvent(type, callback) {
