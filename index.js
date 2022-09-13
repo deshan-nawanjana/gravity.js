@@ -478,16 +478,28 @@ Gravity.InputMap = class {
         })
     }
     // method to check all keys
-    all() {
-        return Array.from(arguments).every(x => this.keys.includes(x))
+    every() {
+        // get inputs as array
+        const inputs = arguments.length === 1 && Array.isArray(arguments[0])
+            ? arguments[0] : Array.from(arguments)
+        // return check result
+        return inputs.every(x => this.keys.includes(x))
     }
     // method to check any keys
-    any() {
-        return Array.from(arguments).some(x => this.keys.includes(x))
+    some() {
+        // get inputs as array
+        const inputs = arguments.length === 1 && Array.isArray(arguments[0])
+            ? arguments[0] : Array.from(arguments)
+        // return check result
+        return inputs.some(x => this.keys.includes(x))
     }
     // method to check not any key
-    not() {
-        return !Array.from(arguments).some(x => this.keys.includes(x))
+    none() {
+        // get inputs as array
+        const inputs = arguments.length === 1 && Array.isArray(arguments[0])
+            ? arguments[0] : Array.from(arguments)
+        // return check result
+        return !inputs.some(x => this.keys.includes(x))
     }
 }
 
