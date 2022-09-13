@@ -273,6 +273,8 @@ Gravity.Texture = class {
         this.color = null
         // image
         this.image = null
+        // opacity
+        this.opacity = 1
         // size of image
         this.size = { x : 'auto', y : 'auto' }
         // position of image
@@ -289,6 +291,8 @@ Gravity.Texture = class {
         this.delay = 0
         // reverse flag
         this.reverse = false
+        // paused flag
+        this.paused = false
         // loop flag
         this.loop = true
         // append style element to head
@@ -306,6 +310,8 @@ Gravity.Texture = class {
         if('color' in options) { this.color = options.color }
         // update image if given
         if('image' in options) { this.image = options.image }
+        // update opacity if given
+        if('opacity' in options) { this.opacity = options.opacity }
         // update size if given
         if('size' in options) { this.size = options.size }
         // update position if given
@@ -322,6 +328,8 @@ Gravity.Texture = class {
         if('delay' in options) { this.delay = options.delay }
         // update reverse if given
         if('reverse' in options) { this.reverse = options.reverse }
+        // update paused if given
+        if('paused' in options) { this.paused = options.paused }
         // update loop if given
         if('loop' in options) { this.loop = options.loop }
         // generate style node
@@ -332,6 +340,10 @@ Gravity.Texture = class {
                     this.image ? `url(${ encodeURI(this.image) })`
                     : 'none'
                 };
+                opacity: ${ this.opacity ? this.opacity : 0 };
+                transition-duration: ${ this.duration }s;
+                transition-delay: ${ this.delay }s;
+                transition-property: background, color, opacity;
                 background-size: ${
                     typeof this.size.x === 'number' ? this.size.x + 'px' : this.size.x
                 } ${
@@ -363,6 +375,9 @@ Gravity.Texture = class {
                 animation-delay: ${ this.delay }s;
                 animation-direction: ${
                     this.reverse ? 'reverse' : 'normal'
+                };
+                animation-play-state: ${
+                    this.paused ? 'paused' : 'running'
                 };
                 animation-iteration-count: ${
                     this.loop === true ? 'infinite'
