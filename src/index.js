@@ -21,6 +21,8 @@ Gravity.Scene = class {
         this.color = null
         // paused flag
         this.paused = false
+        // class type
+        this.type = 'Scene'
         // add cursor events
         _Gravity_.addCursorEvents(this)
         // set options
@@ -142,6 +144,8 @@ Gravity.Object = class {
         this.style = null
         // store on element
         this.element._gravity = this
+        // class type
+        this.type = 'Object'
         // set options
         this.set(options || {})
     }
@@ -295,6 +299,8 @@ Gravity.Texture = class {
         this.paused = false
         // loop flag
         this.loop = true
+        // class type
+        this.type = 'Texture'
         // append style element to head
         document.head.appendChild(this.element)
         // set options
@@ -410,6 +416,8 @@ Gravity.Animation = class {
         this.colors = []
         // images array
         this.images = []
+        // class type
+        this.type = 'Animation'
         // set options
         this.set(options || {})
         // append style element to head
