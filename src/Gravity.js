@@ -473,42 +473,132 @@ Gravity.Animation = class {
 Gravity.Loader = class {
     // constructor
     constructor() {
-        // method to load
-        this.load = async(path) => {
-            // output object
-            let out = null
-            // fetch asset file as json
-            const obj = await fetch(path).then(res => res.json())
-            // check object type
-            if(obj.type === 'Object') {
-                // create object
-                out = new Gravity.Object(obj)
-                // if texture available
-                if(obj.texture) {
-                    out.set('texture', new Gravity.Texture(obj.texture))
+        // method to load a single file
+        this.load = async(path, progress) => {
+            // check file extension
+            if(path.split('.').pop().toLowerCase() !== 'asset') {
+                // load unknown file type as blob
+                const blob = await _Gravity_.loadFile(path, 'blob', progress)
+                // return blob url
+                return URL.createObjectURL(blob)
+            } else {
+                // output object
+                let out = null
+                // get text response of file
+                const txt = await _Gravity_.loadFile(path, 'text', progress)
+                // parse from json
+                const obj = JSON.parse(txt)
+                // check object type
+                if(obj.type === 'Object') {
+                    // create object
+                    out = new Gravity.Object(obj)
+                    // if texture available
+                    if(obj.texture) {
+                        out.set('texture', new Gravity.Texture(obj.texture))
+                        // if animation available
+                        if(obj.texture.animation) {
+                            // create animation
+                            out.texture.set(
+                                'animation', new Gravity.Animation(obj.texture.animation)
+                            )
+                        }
+                    }
+                } else if(obj.type === 'Texture') {
+                    // create texture
+                    out = new Gravity.Texture(obj)
                     // if animation available
-                    if(obj.texture.animation) {
+                    if(obj.animation) {
                         // create animation
-                        out.texture.set('animation', new Gravity.Animation(obj.texture.animation))
+                        out.set('animation', new Gravity.Animation(obj.animation))
+                    }
+                } else if(obj.type === 'Animation') {
+                    // create animation
+                    out = new Gravity.Animation(obj)
+                } else if(obj.type === 'Files') {
+                    // get object files
+                    out = obj.data
+                }
+                // return output
+                return out
+            }
+        }
+        // method to load mutiple files
+        this.loadAll = async(input, progress) => {
+            // files array
+            const files = []
+            // recursive method to get all files
+            const recFiles = (obj, path) => {
+                // if item is an object
+                if(typeof obj === 'object' && obj !== null) {
+                    // get object keys
+                    const keys = Object.keys(obj)
+                    // for each key
+                    for(let i = 0; i < keys.length; i++) {
+                        // current key
+                        const key = keys[i]
+                        // if type is string
+                        if(typeof obj[key] === 'string') {
+                            // push to files with path
+                            files.push({ url : obj[key], path : (path + key).split('.') })
+                        } else {
+                            // search for files in child
+                            recFiles(obj[key], path + key + '.')
+                        }
                     }
                 }
-            } else if(obj.type === 'Texture') {
-                // create texture
-                out = new Gravity.Texture(obj)
-                // if animation available
-                if(obj.animation) {
-                    // create animation
-                    out.set('animation', new Gravity.Animation(obj.animation))
+            }
+            // cumulative loaded
+            let loaded = 0
+            // cumulative total
+            let total = 0
+            // current index
+            let index = null
+            // get all files
+            recFiles(input, '')
+            // for each file
+            for(let i = 0; i < files.length; i++) {
+                // current file
+                const file = files[i]
+                // load single file content
+                const data = await this.load(file.url, e => {
+                    // if progress function available
+                    if(typeof progress === 'function') {
+                        // calculate current total
+                        if(index !== i) {
+                            total += e.total
+                            index = i
+                        }
+                        // callback progress
+                        progress({
+                            loaded : loaded + e.loaded,
+                            total : total,
+                            index : i + 1,
+                            length : files.length,
+                            file : file.url,
+                            size : e.total
+                        })
+                    }
+                })
+                // root object
+                let root = input
+                // for each path item
+                for(let p = 0; p < file.path.length; p++) {
+                    // current key
+                    const key = file.path[p]
+                    // check index
+                    if(p === file.path.length - 1) {
+                        // set data on object
+                        root[key] = data
+                    } else {
+                        // jump to child object
+                        root = root[key]
+                    }
                 }
-            } else if(obj.type === 'Animation') {
-                // create animation
-                out = new Gravity.Animation(obj)
-            } else if(obj.type === 'Files') {
-                // get object files
-                out = obj.data
+                // set current loaded as current totoal
+                loaded = total
             }
             // return output
-            return out
+            return input
         }
     }
 }
@@ -1063,4 +1153,31 @@ _Gravity_.addCursorEvents = scene => {
             }
         })
     }
+}
+
+// helper to load file
+_Gravity_.loadFile = (path, type = 'blob', progress = () => {}) => {
+    // return promise
+    return new Promise((resolve, reject) => {
+        // create new request
+        const xhr = new XMLHttpRequest()
+        // open request
+        xhr.open('GET', path)
+        // response type
+        xhr.responseType = type
+        // on complete
+        xhr.addEventListener('load', e => {
+            // resolve response
+            resolve(e.currentTarget.response)
+        })
+        // on progress
+        xhr.addEventListener('progress', e => {
+            // callback progress
+            progress({ loaded : e.loaded, total : e.total })
+        })
+        // on error
+        xhr.addEventListener('error', reject)
+        // send request
+        xhr.send()
+    })
 }

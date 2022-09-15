@@ -15,7 +15,7 @@ Gravity.Exporter = class {
             // remove events
             delete obj.events
             // download if file name is given
-            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file, 'asset') }
+            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file) }
             // return object
             return obj
         }
@@ -35,7 +35,7 @@ Gravity.Exporter = class {
                 obj.image = await _Gravity_.getDataURL(obj.image)
             }
             // download if file name is given
-            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file, 'asset') }
+            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file) }
             // return object
             return obj
         }
@@ -55,7 +55,7 @@ Gravity.Exporter = class {
                 obj.images[i] = await _Gravity_.getDataURL(obj.images[i])
             }
             // download if file name is given
-            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file, 'asset') }
+            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file) }
             // return object
             return obj
         }
@@ -84,7 +84,7 @@ Gravity.Exporter = class {
             // start load
             await rec(obj.data)
             // download if file name is given
-            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file, 'asset') }
+            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file) }
             // return output
             return obj
         }
@@ -119,7 +119,7 @@ Gravity.Exporter = class {
                 obj = await this.exportAnimation(input)
             }
             // download if file name is given
-            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file, 'asset') }
+            if(file) { _Gravity_.downloadFile(JSON.stringify(obj), file) }
             // return object
             return obj
         }
@@ -146,7 +146,7 @@ _Gravity_.getDataURL = path => {
 }
 
 // helper to download a text file
-_Gravity_.downloadFile = (text, name = 'file.txt', ext = '.txt') => {
+_Gravity_.downloadFile = (text, name = 'file.txt', ext = 'asset') => {
     // create element
     const link = document.createElement('a')
     // set text content
