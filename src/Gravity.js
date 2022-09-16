@@ -474,18 +474,20 @@ Gravity.Loader = class {
     // constructor
     constructor() {
         // method to load a single file
-        this.load = async(path, progress) => {
-            // check file extension
-            if(path.split('.').pop().toLowerCase() !== 'asset') {
+        this.load = async(input, progress) => {
+            // check input type
+            if(typeof input === 'object') {
+                return this.loadAll(input, progress)
+            } else if(input.split('.').pop().toLowerCase() !== 'asset') {
                 // load unknown file type as blob
-                const blob = await _Gravity_.loadFile(path, 'blob', progress)
+                const blob = await _Gravity_.loadFile(input, 'blob', progress)
                 // return blob url
                 return URL.createObjectURL(blob)
             } else {
                 // output object
                 let out = null
                 // get text response of file
-                const txt = await _Gravity_.loadFile(path, 'text', progress)
+                const txt = await _Gravity_.loadFile(input, 'text', progress)
                 // parse from json
                 const obj = JSON.parse(txt)
                 // check object type
@@ -649,6 +651,14 @@ Gravity.InputMap = class {
             ? arguments[0] : Array.from(arguments)
         // return check result
         return !inputs.some(x => this.keys.includes(x))
+    }
+    // method to check single key
+    is(key) {
+        return this.keys.includes(key)
+    }
+    // method to check single key is not pressed
+    not(key) {
+        return !this.keys.includes(key)
     }
 }
 
