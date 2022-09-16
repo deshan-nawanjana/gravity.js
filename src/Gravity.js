@@ -7,6 +7,10 @@ Gravity.Scene = class {
     constructor(options) {
         // create root element
         this.element = document.createElement('gravity')
+        // create inner element
+        this.inner = document.createElement('gravity-inner')
+        // append inner into root
+        this.element.appendChild(this.inner)
         // objects array
         this.objects = []
         // system resistance
@@ -41,7 +45,14 @@ Gravity.Scene = class {
         // update gravity if given
         if('gravity' in options) { this.gravity = options.gravity }
         // update position if given
-        if('position' in options) { this.position = options.position }
+        if('position' in options) {
+            // update position
+            this.position = options.position
+            // generate transform rule for inner
+            const itr = `translateX(${ this.position.x }px) translateY(${ this.position.y }px)`
+            // update inner transform
+            this.inner.style.transform = itr
+        }
         // update size if given
         if('size' in options) {
             // update size
@@ -64,7 +75,7 @@ Gravity.Scene = class {
         // push to objects array
         this.objects.push(object)
         // append to root element
-        this.element.appendChild(object.element)
+        this.inner.appendChild(object.element)
     }
     // method to remove objects
     remove(object) {
@@ -861,18 +872,18 @@ _Gravity_.updateMotion = scene => {
         // child element
         const element = child.element
         // if any x position change
-        if(child.position.x + scene.position.x !== child.position._x) {
+        if(child.position.x !== child.position._x) {
             // update x position
-            element.style.left = child.position.x + scene.position.x + 'px'
+            element.style.left = child.position.x + 'px'
             // store last position
-            child.position._x = child.position.x + scene.position.x
+            child.position._x = child.position.x
         }
         // if any y position change
-        if(child.position.y + scene.position.y !== child.position._y) {
+        if(child.position.y !== child.position._y) {
             // update y position
-            element.style.top = child.position.y + scene.position.y + 'px'
+            element.style.top = child.position.y + 'px'
             // store last position
-            child.position._y = child.position.y + scene.position.y
+            child.position._y = child.position.y
         }
     }
 }

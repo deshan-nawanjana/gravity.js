@@ -1,6 +1,5 @@
 gravity {
     display: block;
-    position: relative;
     width: 400px;
     height: 300px;
     overflow: hidden;
@@ -9,7 +8,11 @@ gravity {
     -webkit-tap-highlight-color: transparent;
 }
 
-gravity > obj {
+gravity-inner {
+    position: absolute;
+}
+
+gravity-inner > obj {
     display: block;
     position: absolute;
     left: 0px;
@@ -18,7 +21,7 @@ gravity > obj {
     height: 50px;
 }
 
-gravity[paused] > obj {
+gravity[paused] obj {
     animation-play-state: paused !important;
 }
 
