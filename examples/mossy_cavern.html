@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./mossy_cavern.png" type="image/x-icon">
+    <link rel="stylesheet" href="../src/Gravity.css">
+    <script src="../src/Gravity.js"></script>
+    <link rel="stylesheet" href="./mossy_cavern.css">
+    <script src="./mossy_cavern.js"></script>
+    <title>Mossy Cavern</title>
+</head>
+<body>
+    <div class="loading-screen">
+        <div class="loading"></div>
+    </div>
+    <script>
+        // method for updating loading screen
+        const loading = x => {
+            // get bar length
+            const p = parseInt(x.loaded * 260 / 13010047)
+            // update lenght
+            document.querySelector('.loading').style.boxShadow = `inset ${p}px 0px 0px 0px #06c`
+            // if fully loaded
+            if(p === 260) {
+                // delay
+                setTimeout(() => {
+                    // hide loading screen
+                    document.querySelector('.loading-screen').style.display = 'none'
+                }, 300)
+            }
+        }
+        // load assets
+        new Gravity.Loader().load(assets, loading).then(() => {
+            // create wizard
+            const wizard = createWizard(9, 580, 600)
+            // create low level decorations
+            createDecoration(0, 0, 180, 100)
+            createDecoration(0, 2, -60, -50, false, true)
+            createDecoration(0, 4, 600, 940)
+            createDecoration(0, 1, 600, -70)
+            createDecoration(0, 5, 940, -70, false, true)
+            // create a fog layer
+            createFogLayer(1)
+            // create hangings
+            createHanging(2, 5, 300, 160, false, true)
+            createHanging(2, 5, 720, 660, false, true, 1)
+            createHanging(2, 5, 1240, 800, false, true, 0.7)
+            // create hazards
+            createHazard(2, 1, 980, 910, false, false, 1)
+            createHazard(2, 2, 40, 710, false, false, 1)
+            createHazard(4, 23, 1190, -10, false, false, 1)
+            createHazard(2, 24, 570, 380, false, false, 1)
+            // create plants
+            createPlant(2, 2, 120, 410)
+            createPlant(2, 8, 680, 370, true, true)
+            createPlant(2, 9, 740, 810, true)
+            createPlant(2, 10, 420, 240, false)
+            // create a fog layer
+            createFogLayer(2)
+            // create plants
+            createPlant(3, 0, 900, 410)
+            createPlant(3, 4, 170, 800, true)
+            createPlant(3, 6, 900, 900, true)
+            createPlant(3, 7, 1145, 355)
+            createPlant(3, 8, 50, 1040, true)
+            createPlant(3, 8, 590, 215, true)
+            createPlant(3, 9, 790, 450, false)
+            // create hazards
+            createHazard(3, 0, 270, 1000, false, false, 1)
+            // crate platform to walk
+            createPlatform(15, 3, 125, 300)
+            createPlatform(15, 3, 60, 720)
+            createPlatform(15, 3, 1100, 780)
+            createPlatform(15, 5, 920, 520)
+            createPlatform(15, 8, 535, 330)
+            createPlatform(15, 8, 1100, 300)
+            createPlatform(15, 9, 120, 520)
+            createPlatform(15, 10, -90, 920)
+            createPlatform(15, 10, 870, 1020)
+            createPlatform(15, 11, 450, 720)
+            // create bound layers
+            createBounds()
+            // method to render
+            const render = () => {
+                // request next frame
+                requestAnimationFrame(render)
+                // update wizard movements
+                wizard.update()
+                // render scene
+                scene.render()
+            }
+            // start render
+            render()
+        })
+    </script>
+</body>
+</html>

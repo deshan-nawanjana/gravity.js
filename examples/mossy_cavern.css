@@ -1,0 +1,30 @@
+body {
+    margin: 0px;
+    overflow: hidden;
+    background-image: radial-gradient( #fff, #021a2c);
+}
+
+.decoration {
+    filter: blur(4px);
+}
+
+.loading-screen {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 100;
+    top: 0px;
+    left: 0px;
+    background-color: #111;
+}
+
+.loading {
+    width: 260px;
+    height: 4px;
+    background-color: #FFF2;
+    position: fixed;
+    z-index: 11;
+    top: calc(50vh - 2px);
+    left: calc(50vw - 130px);
+    transition: box-shadow 0.2s;
+}
